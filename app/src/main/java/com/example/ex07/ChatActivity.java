@@ -104,6 +104,13 @@ public class ChatActivity extends AppCompatActivity {
 
             @Override
             public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+                ChatVO vo = snapshot.getValue(ChatVO.class);
+                for(ChatVO chat:array) {
+                    if(chat.getKey().equals(vo.getKey())) {
+                        array.remove(chat);
+                        break;
+                    }
+                }
                 adapter.notifyDataSetChanged();
             }
 
@@ -143,33 +150,40 @@ public class ChatActivity extends AppCompatActivity {
             holder.txtContents.setText(vo.getContents());
             holder.txtEmail.setText(vo.getEmail());
             holder.txtDate.setText(vo.getDate());
+
             LinearLayout.LayoutParams pcontents = (LinearLayout.LayoutParams) holder.txtContents.getLayoutParams();
             LinearLayout.LayoutParams pdate = (LinearLayout.LayoutParams) holder.txtDate.getLayoutParams();
+
             if(vo.getEmail().equals(user.getEmail())) {
-                holder.txtEmail.setVisibility(View.GONE);
                 pcontents.gravity = Gravity.RIGHT;
                 pdate.gravity = Gravity.RIGHT;
+                holder.txtEmail.setVisibility(View.GONE); // 인비지블은 위치는 차지하고 안보이는거, gone은 위치까지 안보임
+            } else {
+                pcontents.gravity = Gravity.LEFT;
+                pdate.gravity = Gravity.LEFT;
+                holder.txtEmail.setVisibility(View.VISIBLE);
             }
 
             holder.txtContents.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    AlertDialog.Builder box = new AlertDialog.Builder(ChatActivity.this);
-                    box.setTitle("메뉴를 선택하세요!");
-                    box.setItems(new String[]{"삭제", "취소"}, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if(which == 0) {
-                                // 삭제하겠다! 위에 String의 인덱스 0번이 "삭제", 인덱스와 which가 위치를 위미
-                                db.getReference("chat/" + vo.getKey()).removeValue();
-                                array.remove(vo);
+                    if(vo.getEmail().equals(user.getEmail())) {
+                        AlertDialog.Builder box = new AlertDialog.Builder(ChatActivity.this);
+                        box.setTitle("메뉴를 선택하세요!");
+                        box.setItems(new String[]{"삭제", "취소"}, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                if(which == 0) {
+                                    db.getReference("chat/" + vo.getKey()).removeValue();
+                                }
                             }
-                        }
-                    });
-                    box.show();
+                        });
+                        box.show();
+                    }
                     return false;
                 }
             });
+
         }
 
         @Override
